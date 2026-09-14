@@ -1,54 +1,13 @@
 "use strict";
 (() => {
   const $ = (id) => document.getElementById(id);
-  const video = $("cameraPreview"), start = $("startCamera"), stop = $("stopCamera"), calibrate = $("calibrateTracking"), status = $("trackingStatus"), smooth = $("trackingSmoothing");
-  const headX = $("headX"), headY = $("headY");
-  let stream=null, detector=null, running=false, raf=0, neutral=null, sx=0, sy=0, busy=false;
-  const supported = Boolean(navigator.mediaDevices?.getUserMedia && "FaceDetector" in window);
-
-  function setStatus(text){ if(status) status.textContent=text; }
-  function dispatch(control,value){ control.value=String(value); control.dispatchEvent(new Event("input",{bubbles:true})); }
-  function smoothTo(current,target,a){ return current+(target-current)*a; }
-  async function detect(){
-    if(!running) return;
-    if(!busy && video?.readyState>=2 && detector){
-      busy=true;
-      try{
-        const faces=await detector.detect(video);
-        if(faces.length){
-          const box=faces[0].boundingBox;
-          const cx=(box.x+box.width/2)/video.videoWidth;
-          const cy=(box.y+box.height/2)/video.videoHeight;
-          if(!neutral) neutral={x:cx,y:cy};
-          const targetX=Math.max(-30,Math.min(30,(cx-neutral.x)*-120));
-          const targetY=Math.max(-30,Math.min(30,(cy-neutral.y)*120));
-          const a=Math.max(.04,Math.min(.6,1-(Number(smooth?.value||70)/100)*.85));
-          sx=smoothTo(sx,targetX,a); sy=smoothTo(sy,targetY,a);
-          dispatch(headX,sx.toFixed(2)); dispatch(headY,sy.toFixed(2));
-          setStatus("Tracking face locally");
-        } else setStatus("Camera active — face not detected");
-      }catch{ setStatus("Tracking paused — detector error"); }
-      finally{ busy=false; }
-    }
-    raf=requestAnimationFrame(detect);
-  }
-  async function startCamera(){
-    if(running) return;
-    if(!navigator.mediaDevices?.getUserMedia){ setStatus("Camera API unavailable in this browser"); return; }
-    try{
-      stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:{ideal:640},height:{ideal:480}},audio:false});
-      video.srcObject=stream; await video.play();
-      if(supported){ detector=new FaceDetector({fastMode:true,maxDetectedFaces:1}); setStatus("Camera active — detecting face locally"); }
-      else { detector=null; setStatus("Camera active. Native face tracking is not supported by this browser; manual rig preview remains available."); }
-      running=true; stop.disabled=false; calibrate.disabled=!supported; start.disabled=true; neutral=null; sx=0; sy=0; raf=requestAnimationFrame(detect);
-    }catch(error){ setStatus(error?.name==="NotAllowedError"?"Camera permission was denied":"Could not start camera"); }
-  }
-  function stopCamera(){
-    running=false; cancelAnimationFrame(raf); stream?.getTracks().forEach(t=>t.stop()); stream=null; detector=null; if(video) video.srcObject=null;
-    start.disabled=false; stop.disabled=true; calibrate.disabled=true; neutral=null; setStatus("Camera off");
-  }
-  start?.addEventListener("click",startCamera); stop?.addEventListener("click",stopCamera); calibrate?.addEventListener("click",()=>{neutral=null; setStatus("Recalibrating neutral head position…");});
-  window.addEventListener("beforeunload",stopCamera);
-  if(!supported && status) status.textContent="Native face tracking support will be checked when camera starts.";
-  window.MeguTracker={ start:startCamera, stop:stopCamera, supported:()=>supported };
+  const video=$("cameraPreview"),start=$("startCamera"),stop=$("stopCamera"),calibrate=$("calibrateTracking"),status=$("trackingStatus"),smooth=$("trackingSmoothing"),smoothOut=$("trackingSmoothingOut");
+  const headX=$("headX"),headY=$("headY");
+  let stream=null,detector=null,running=false,raf=0,neutral=null,sx=0,sy=0,busy=false;
+  const supported=Boolean(navigator.mediaDevices?.getUserMedia&&"FaceDetector" in window);
+  function setStatus(text){if(status)status.textContent=text}function dispatch(control,value){control.value=String(value);control.dispatchEvent(new Event("input",{bubbles:true}))}function smoothTo(current,target,a){return current+(target-current)*a}function updateSmoothing(){if(smoothOut)smoothOut.textContent=`${smooth?.value||70}%`}
+  async function detect(){if(!running)return;if(!busy&&video?.readyState>=2&&detector){busy=true;try{const faces=await detector.detect(video);if(faces.length){const box=faces[0].boundingBox,cx=(box.x+box.width/2)/video.videoWidth,cy=(box.y+box.height/2)/video.videoHeight;if(!neutral)neutral={x:cx,y:cy};const targetX=Math.max(-30,Math.min(30,(cx-neutral.x)*-120)),targetY=Math.max(-30,Math.min(30,(cy-neutral.y)*120)),a=Math.max(.04,Math.min(.6,1-(Number(smooth?.value||70)/100)*.85));sx=smoothTo(sx,targetX,a);sy=smoothTo(sy,targetY,a);dispatch(headX,sx.toFixed(2));dispatch(headY,sy.toFixed(2));setStatus("Tracking face locally")}else setStatus("Camera active — face not detected")}catch{setStatus("Tracking paused — detector error")}finally{busy=false}}raf=requestAnimationFrame(detect)}
+  async function startCamera(){if(running)return;if(!navigator.mediaDevices?.getUserMedia){setStatus("Camera API unavailable in this browser");return}try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:{ideal:640},height:{ideal:480}},audio:false});video.srcObject=stream;await video.play();if(supported){detector=new FaceDetector({fastMode:true,maxDetectedFaces:1});setStatus("Camera active — detecting face locally")}else{detector=null;setStatus("Camera active. Native face tracking is not supported by this browser; manual rig preview remains available.")}running=true;stop.disabled=false;calibrate.disabled=!supported;start.disabled=true;neutral=null;sx=0;sy=0;raf=requestAnimationFrame(detect)}catch(error){setStatus(error?.name==="NotAllowedError"?"Camera permission was denied":"Could not start camera")}}
+  function stopCamera(){running=false;cancelAnimationFrame(raf);stream?.getTracks().forEach(t=>t.stop());stream=null;detector=null;if(video)video.srcObject=null;start.disabled=false;stop.disabled=true;calibrate.disabled=true;neutral=null;setStatus("Camera off")}
+  start?.addEventListener("click",startCamera);stop?.addEventListener("click",stopCamera);calibrate?.addEventListener("click",()=>{neutral=null;setStatus("Recalibrating neutral head position…")});smooth?.addEventListener("input",updateSmoothing);window.addEventListener("beforeunload",stopCamera);updateSmoothing();if(!supported&&status)status.textContent="Native face tracking support will be checked when camera starts.";window.MeguTracker={start:startCamera,stop:stopCamera,supported:()=>supported};
 })();
