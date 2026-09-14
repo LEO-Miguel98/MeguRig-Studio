@@ -44,6 +44,10 @@ This native path intentionally avoids remote tracking libraries. More detailed e
 
 Exporting a project produces a data-only JSON file. Artwork is intentionally not embedded. To resume work, open the MeguRig project first, then select the same local artwork files. Layers are matched by sanitized filename and the saved rig data is restored.
 
+## Target-model validation
+
+Development is being driven toward a full-body maid-style VTuber acceptance model with layered hair, face parts, eye/mouth expressions, sleeves, ribbons, back bow, clothing, accessories, and secondary-motion elements. The tool should not be considered ready for that full model until those parts can be prepared, rigged, previewed, saved/reopened, and validated end to end without breaking earlier workflows.
+
 ## Privacy and security
 
 Artwork and camera frames remain local to the browser. The app has no backend, analytics, remote scripts, or credential requirements. Project JSON is size-bounded and validated before restore; known parameters and rig roles are allowlisted, numerical ranges are clamped, and mesh/keyform sizes are limited. Do not commit personal model source art, credentials, proprietary Live2D files, or exported model packages.
