@@ -38,7 +38,7 @@ The expression panel drives the same parameter controls used by the rig preview.
 
 Camera frames are never uploaded by MeguRig Studio. The current dependency-free tracker uses the browser's native `FaceDetector` API where available and maps face position to Head X and Head Y with smoothing and neutral calibration. Browsers without `FaceDetector` can still show the local camera preview, but automatic face tracking falls back to the manual rig sliders.
 
-This native path intentionally avoids remote tracking libraries. More detailed eye blink, mouth-open, head rotation, and landmark tracking will require a later local tracking engine or an optional audited dependency.
+The current tracker does not yet estimate true 3D yaw/pitch/roll, eye openness, or mouth openness. Those require a more detailed local landmark engine, which remains a planned stage rather than being simulated or falsely labeled as complete.
 
 ## Saving and reopening
 
