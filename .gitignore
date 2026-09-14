@@ -1,24 +1,32 @@
-# OS/editor files
+# OS / editor
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
 
-# Dependencies/build output (future tooling)
-node_modules/
-dist/
-build/
-coverage/
-
-# Local environment and secrets
+# Local environment / credentials
 .env
 .env.*
-!.env.example
 *.pem
 *.key
 *.p12
 *.pfx
 
-# Temporary model/export files
+# Local model artwork / exports
+models/
+artwork/
+exports/
+*.psd
+*.clip
+*.cmo3
+*.moc3
+
+# Build / package caches
+node_modules/
+dist/
+.cache/
+coverage/
+
+# Temporary files
 *.tmp
-*.bak
+*.log
