@@ -4,79 +4,79 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="description" content="MeguRig Studio — local-first VTuber model preparation and rig preview tool." />
-  <meta name="color-scheme" content="dark light" />
+  <meta name="color-scheme" content="dark" />
   <title>MeguRig Studio</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header class="topbar">
-    <div>
-      <p class="eyebrow">VTuber Model Preparation</p>
-      <h1>MeguRig Studio</h1>
-    </div>
-    <span class="privacy-badge">Local-only image processing</span>
+    <div><p class="eyebrow">VTuber Model Preparation</p><h1>MeguRig Studio</h1></div>
+    <span class="privacy-badge">Local-only artwork processing</span>
   </header>
 
   <main class="layout">
     <aside class="panel controls" aria-label="Rig controls">
       <section>
-        <h2>1. Load artwork</h2>
-        <label class="upload" for="imageInput">Choose PNG/JPG/WebP</label>
-        <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" />
-        <p class="hint">Your image stays in this browser tab and is never uploaded by this app.</p>
+        <h2>1. Import artwork</h2>
+        <label class="upload" for="imageInput">Open flattened artwork</label>
+        <input id="imageInput" class="file-input" type="file" accept="image/png,image/jpeg,image/webp" />
+        <label class="upload secondary" for="layerInput">Add separated PNG layers</label>
+        <input id="layerInput" class="file-input" type="file" accept="image/png,image/webp" multiple />
+        <p class="hint">Artwork stays inside this browser tab. Layer import accepts multiple transparent PNG/WebP files.</p>
       </section>
 
       <section>
-        <h2>2. Preview parameters</h2>
-        <label>Head X <output id="headXOut">0</output>
-          <input id="headX" type="range" min="-30" max="30" value="0" />
-        </label>
-        <label>Head Y <output id="headYOut">0</output>
-          <input id="headY" type="range" min="-30" max="30" value="0" />
-        </label>
-        <label>Body Z <output id="bodyZOut">0</output>
-          <input id="bodyZ" type="range" min="-20" max="20" value="0" />
-        </label>
-        <label>Eye open <output id="eyeOut">100%</output>
-          <input id="eyeOpen" type="range" min="0" max="100" value="100" />
-        </label>
-        <label>Mouth open <output id="mouthOut">0%</output>
-          <input id="mouthOpen" type="range" min="0" max="100" value="0" />
-        </label>
-      </section>
-
-      <section>
-        <h2>3. Rig markers</h2>
-        <div class="button-grid">
-          <button data-marker="Head Pivot">Head</button>
-          <button data-marker="Left Eye">L Eye</button>
-          <button data-marker="Right Eye">R Eye</button>
-          <button data-marker="Mouth">Mouth</button>
-          <button data-marker="Body Pivot">Body</button>
-          <button id="clearMarkers" class="ghost">Clear</button>
+        <div class="section-title"><h2>2. Layers</h2><span id="layerCount">0</span></div>
+        <div id="layerList" class="layer-list" aria-live="polite"><p class="hint">No layers loaded.</p></div>
+        <div class="button-grid compact">
+          <button id="layerUp" disabled>Move up</button><button id="layerDown" disabled>Move down</button>
+          <button id="toggleLayer" disabled>Hide</button><button id="deleteLayer" class="danger" disabled>Remove</button>
         </div>
-        <p class="hint">Select a marker, then click the artwork to place it.</p>
       </section>
 
       <section>
-        <h2>4. Export prep data</h2>
-        <button id="exportRig" class="primary" disabled>Export Rig JSON</button>
+        <h2>3. Selected layer transform</h2>
+        <label>X <output id="layerXOut">0</output><input id="layerX" type="range" min="-500" max="500" value="0" disabled /></label>
+        <label>Y <output id="layerYOut">0</output><input id="layerY" type="range" min="-500" max="500" value="0" disabled /></label>
+        <label>Rotation <output id="layerRotationOut">0°</output><input id="layerRotation" type="range" min="-180" max="180" value="0" disabled /></label>
+        <label>Scale <output id="layerScaleOut">100%</output><input id="layerScale" type="range" min="10" max="250" value="100" disabled /></label>
+        <label>Opacity <output id="layerOpacityOut">100%</output><input id="layerOpacity" type="range" min="0" max="100" value="100" disabled /></label>
+        <button id="setPivot" disabled>Set pivot on canvas</button>
+      </section>
+
+      <section>
+        <h2>4. Rig preview</h2>
+        <label>Head X <output id="headXOut">0</output><input id="headX" type="range" min="-30" max="30" value="0" /></label>
+        <label>Head Y <output id="headYOut">0</output><input id="headY" type="range" min="-30" max="30" value="0" /></label>
+        <label>Body Z <output id="bodyZOut">0</output><input id="bodyZ" type="range" min="-20" max="20" value="0" /></label>
+        <label>Eye open <output id="eyeOut">100%</output><input id="eyeOpen" type="range" min="0" max="100" value="100" /></label>
+        <label>Mouth open <output id="mouthOut">0%</output><input id="mouthOpen" type="range" min="0" max="100" value="0" /></label>
+      </section>
+
+      <section>
+        <h2>5. Rig markers</h2>
+        <div class="button-grid">
+          <button data-marker="Head Pivot">Head</button><button data-marker="Left Eye">L Eye</button>
+          <button data-marker="Right Eye">R Eye</button><button data-marker="Mouth">Mouth</button>
+          <button data-marker="Body Pivot">Body</button><button id="clearMarkers" class="ghost">Clear</button>
+        </div>
+        <p class="hint">Choose a marker, then click the canvas.</p>
+      </section>
+
+      <section>
+        <h2>6. Export</h2>
+        <button id="exportRig" class="primary" disabled>Export Project JSON</button>
         <button id="exportSnapshot" disabled>Export Preview PNG</button>
       </section>
     </aside>
 
     <section class="workspace" aria-label="Model preview workspace">
-      <div id="dropZone" class="drop-zone" tabindex="0">
-        <canvas id="stage" width="1000" height="1000" aria-label="VTuber artwork preview"></canvas>
-        <div id="emptyState" class="empty-state">
-          <strong>Drop a character image here</strong>
-          <span>or use “Choose PNG/JPG/WebP”</span>
-        </div>
+      <div class="workspace-toolbar"><strong id="selectedLayerName">No layer selected</strong><span id="modeStatus">Mode: markers</span></div>
+      <div id="dropZone" class="drop-zone" tabindex="0" aria-label="Drop artwork here">
+        <canvas id="stage" width="1200" height="1200" aria-label="VTuber artwork preview"></canvas>
+        <div id="emptyState" class="empty-state"><strong>Drop character artwork here</strong><span>Use a flattened image or separated transparent layers</span></div>
       </div>
-      <div class="statusbar">
-        <span id="status">No artwork loaded</span>
-        <span id="markerStatus">Marker: none</span>
-      </div>
+      <div class="statusbar"><span id="status">No artwork loaded</span><span id="markerStatus">Marker: none</span></div>
     </section>
   </main>
 
