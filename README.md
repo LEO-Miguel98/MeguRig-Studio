@@ -7,10 +7,11 @@ MeguRig Studio is a private, local-first VTuber model preparation and rigging wo
 - Load flattened PNG/JPG/WebP artwork.
 - Import multiple separated transparent PNG/WebP layers.
 - Reorder, show/hide, move, rotate, scale, and change opacity per layer.
+- Classify layers as face, left/right eye, brows, mouth, hair, body, clothes, accessory, or generic art.
 - Set a custom pivot per layer directly on the canvas.
 - Place head, eye, mouth, and body rig markers.
 - Preview basic head/body parameter movement.
-- Export a `megurig.project.v2` JSON manifest containing scene, layer, pivot, marker, and parameter data.
+- Export a `megurig.project.v2` JSON manifest containing scene, layer roles, transforms, pivots, markers, and parameter data.
 - Export a PNG preview of the current canvas.
 - Works as a static browser app and is compatible with GitHub Pages.
 
@@ -24,7 +25,7 @@ MeguRig Studio does **not** generate a Live2D `.moc3` file by itself. The curren
 
 ## Planned next stages
 
-1. Layer roles and grouping presets for face, eyes, mouth, hair, body, clothes, and accessories.
+1. Layer groups and presets for common VTuber part layouts.
 2. Mesh/deformer editor and parameter-keyform system.
 3. Automatic facial landmark suggestions and layer-role detection.
 4. Physics chains for hair, ribbons, clothing, and accessories.
