@@ -1,33 +1,38 @@
 # MeguRig Studio
 
-MeguRig Studio is a private, local-first VTuber model preparation and rigging workflow project focused on clean layer preparation, parameter mapping, preview tooling, and Live2D/Cubism export assistance.
+MeguRig Studio is a private, local-first VTuber rig-preparation workspace designed to turn separated character artwork into structured parameter-driven rig data.
 
 ## Current capabilities
 
-- Load flattened PNG/JPG/WebP artwork.
-- Import multiple separated transparent PNG/WebP layers.
-- Reorder, show/hide, move, rotate, scale, and change opacity per layer.
-- Classify layers as face, left/right eye, brows, mouth, hair, body, clothes, accessory, or generic art.
-- Set a custom pivot per layer directly on the canvas.
-- Place head, eye, mouth, and body rig markers.
-- Preview basic head/body parameter movement.
-- Export a `megurig.project.v2` JSON manifest containing scene, layer roles, transforms, pivots, markers, and parameter data.
-- Export a PNG preview of the current canvas.
-- Works as a static browser app and is compatible with GitHub Pages.
+- Flattened PNG/JPG/WebP and multi-layer transparent PNG/WebP import.
+- Layer ordering, visibility, rig roles, position, rotation, scale, opacity, and custom pivots.
+- VTuber markers for head, eyes, mouth, and body.
+- Transform keyforms for Head X, Head Y, Body Z, Eye Open, and Mouth Open.
+- Linear interpolation preview between captured keyforms.
+- Structured `megurig.project.v3` JSON export with transforms, pivots, roles, markers, parameters, and keyforms.
+- Preview PNG export.
+- Dependency-free static architecture compatible with GitHub Pages.
+
+## Keyform workflow
+
+1. Import separated artwork and select a layer.
+2. Choose a parameter in **Deformer keyforms**.
+3. Choose a key value, position/rotate/scale the layer for that pose, then capture the keyform.
+4. Capture at least two values (for example Head X `-30` and `30`).
+5. Move the matching Rig Preview slider to preview interpolation between captured states.
 
 ## Privacy and security
 
-Artwork is processed with browser object URLs and is not uploaded by this app. Imported files are type/size checked, filenames are sanitized before export metadata is produced, and there are no remote scripts, API keys, credentials, or proprietary Live2D binaries in the repository.
+Artwork remains local to the browser. The app has no backend, analytics, remote scripts, or credential requirements. Do not commit personal model source art, credentials, proprietary Live2D files, or exported model packages.
 
 ## Important limitation
 
-MeguRig Studio does **not** generate a Live2D `.moc3` file by itself. The current goal is to automate model preparation and export structured rig data that can later feed a Cubism-assisted workflow. Proprietary Live2D components must remain outside this repository unless their license explicitly permits distribution.
+This is currently a transform-deformer system. It does not yet provide per-vertex ArtMesh deformation, automatic image separation, webcam tracking, or direct `.moc3` generation. Proprietary Live2D components remain outside this repository unless their license explicitly permits distribution.
 
 ## Planned next stages
 
-1. Layer groups and presets for common VTuber part layouts.
-2. Mesh/deformer editor and parameter-keyform system.
-3. Automatic facial landmark suggestions and layer-role detection.
-4. Physics chains for hair, ribbons, clothing, and accessories.
-5. Webcam tracking preview.
-6. Cubism export-assistance tooling and validation.
+1. ArtMesh/vertex deformation and mesh editing.
+2. Physics chains for hair, ribbons, clothing, and accessories.
+3. Facial landmark and layer-role assistance.
+4. Webcam tracking preview.
+5. Cubism export-assistance tooling and validation.
