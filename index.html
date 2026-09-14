@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="MeguRig Studio — local-first VTuber model preparation and rig preview tool." />
+  <meta name="color-scheme" content="dark light" />
+  <title>MeguRig Studio</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">VTuber Model Preparation</p>
+      <h1>MeguRig Studio</h1>
+    </div>
+    <span class="privacy-badge">Local-only image processing</span>
+  </header>
+
+  <main class="layout">
+    <aside class="panel controls" aria-label="Rig controls">
+      <section>
+        <h2>1. Load artwork</h2>
+        <label class="upload" for="imageInput">Choose PNG/JPG/WebP</label>
+        <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" />
+        <p class="hint">Your image stays in this browser tab and is never uploaded by this app.</p>
+      </section>
+
+      <section>
+        <h2>2. Preview parameters</h2>
+        <label>Head X <output id="headXOut">0</output>
+          <input id="headX" type="range" min="-30" max="30" value="0" />
+        </label>
+        <label>Head Y <output id="headYOut">0</output>
+          <input id="headY" type="range" min="-30" max="30" value="0" />
+        </label>
+        <label>Body Z <output id="bodyZOut">0</output>
+          <input id="bodyZ" type="range" min="-20" max="20" value="0" />
+        </label>
+        <label>Eye open <output id="eyeOut">100%</output>
+          <input id="eyeOpen" type="range" min="0" max="100" value="100" />
+        </label>
+        <label>Mouth open <output id="mouthOut">0%</output>
+          <input id="mouthOpen" type="range" min="0" max="100" value="0" />
+        </label>
+      </section>
+
+      <section>
+        <h2>3. Rig markers</h2>
+        <div class="button-grid">
+          <button data-marker="Head Pivot">Head</button>
+          <button data-marker="Left Eye">L Eye</button>
+          <button data-marker="Right Eye">R Eye</button>
+          <button data-marker="Mouth">Mouth</button>
+          <button data-marker="Body Pivot">Body</button>
+          <button id="clearMarkers" class="ghost">Clear</button>
+        </div>
+        <p class="hint">Select a marker, then click the artwork to place it.</p>
+      </section>
+
+      <section>
+        <h2>4. Export prep data</h2>
+        <button id="exportRig" class="primary" disabled>Export Rig JSON</button>
+        <button id="exportSnapshot" disabled>Export Preview PNG</button>
+      </section>
+    </aside>
+
+    <section class="workspace" aria-label="Model preview workspace">
+      <div id="dropZone" class="drop-zone" tabindex="0">
+        <canvas id="stage" width="1000" height="1000" aria-label="VTuber artwork preview"></canvas>
+        <div id="emptyState" class="empty-state">
+          <strong>Drop a character image here</strong>
+          <span>or use “Choose PNG/JPG/WebP”</span>
+        </div>
+      </div>
+      <div class="statusbar">
+        <span id="status">No artwork loaded</span>
+        <span id="markerStatus">Marker: none</span>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
