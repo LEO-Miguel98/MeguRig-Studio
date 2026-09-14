@@ -1,16 +1,22 @@
 # Security Policy
 
-MeguRig Studio is designed to keep imported character artwork local to the browser by default.
+MeguRig Studio is designed as a local-first browser tool. Character artwork is loaded with browser object URLs and is not intentionally transmitted to a server by the application.
 
-## Current security principles
+## Security rules
 
-- Do not commit API keys, tokens, passwords, private keys, or personal credentials.
-- Imported model images are processed with browser object URLs and are not uploaded by the application.
-- File inputs are restricted to PNG, JPEG, and WebP and capped at 25 MB in the current UI.
-- Downloaded filenames are sanitized before use.
-- Third-party scripts are intentionally avoided in the initial build.
-- Live2D proprietary binaries are not bundled or committed to this repository.
+- Never commit API keys, passwords, tokens, cookies, private certificates, or other credentials.
+- Do not add third-party scripts or remote analytics without a security and privacy review.
+- Keep proprietary Live2D/Cubism binaries outside this repository unless their license explicitly permits redistribution.
+- Treat imported artwork and filenames as untrusted input.
+- Keep file type, file size, and layer-count limits in place unless there is a documented reason to change them.
+- Render user-controlled filenames with DOM text APIs, not HTML injection.
+- Revoke object URLs when images are replaced, removed, or the page unloads.
+- Export project metadata only; do not silently embed or upload source artwork.
+
+## Current trust boundary
+
+The static app can read only files the user explicitly selects or drops into the page. The current implementation has no backend, authentication system, database, remote API, or secret storage. Browser security and the hosting origin still remain part of the overall threat model.
 
 ## Reporting
 
-If a security issue is found, avoid posting secrets or private model assets in a public issue. Rotate any exposed credential immediately and remove it from repository history where appropriate.
+Report security issues privately to the repository owner. Avoid opening a public issue when a vulnerability could expose user artwork, credentials, or other sensitive data.
