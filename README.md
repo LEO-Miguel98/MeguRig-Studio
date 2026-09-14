@@ -17,9 +17,10 @@ MeguRig Studio is a private, local-first VTuber rig-preparation workspace design
 
 1. Import separated artwork and select a layer.
 2. Choose a parameter in **Deformer keyforms**.
-3. Choose a key value, position/rotate/scale the layer for that pose, then capture the keyform.
-4. Capture at least two values (for example Head X `-30` and `30`).
-5. Move the matching Rig Preview slider to preview interpolation between captured states.
+3. Set the layer transform for a desired pose, choose the corresponding **Key value**, then press **Capture keyform**.
+4. Repeat with at least one other value; for example capture Head X at `-30` and `30` using different transforms.
+5. Move the matching **Rig Preview** slider to preview interpolation between captured states.
+6. To replace a key, choose the same key value, edit the layer transform, and capture it again.
 
 ## Privacy and security
 
