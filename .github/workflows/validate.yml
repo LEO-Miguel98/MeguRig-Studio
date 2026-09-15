@@ -20,12 +20,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for file in *.js engine/*.js; do node --check "$file"; done
+          for file in *.js engine/*.js engine/*.mjs; do node --check "$file"; done
       - name: Regression and security checks
         run: node ci-test.mjs
-      - name: Engine foundation tests
+      - name: Engine tests
         shell: bash
         run: |
           set -euo pipefail
-          node engine/core.test.mjs
-          node engine/webgl2-renderer.test.mjs
+          for test in engine/*.test.mjs; do node "$test"; done
