@@ -1,53 +1,5 @@
 "use strict";
-(() => {
-  const $ = id => document.getElementById(id);
-  const analyze = $("autoRigAnalyze"), apply = $("autoRigApply"), summary = $("autoRigSummary");
-  const roleSelect = $("layerRole"), physics = $("physicsEnabled"), createMesh = $("createMesh"), meshDensity = $("meshDensity");
-  let suggestions = [];
-  const rules = [
-    [/\b(left|l)[ _.-]*(eye|iris|pupil)\b|\b(eye|iris|pupil)[ _.-]*(left|l)\b/i,"eye-left"],
-    [/\b(right|r)[ _.-]*(eye|iris|pupil)\b|\b(eye|iris|pupil)[ _.-]*(right|r)\b/i,"eye-right"],
-    [/\b(left|l)[ _.-]*(brow|eyebrow)\b|\b(brow|eyebrow)[ _.-]*(left|l)\b/i,"brow-left"],
-    [/\b(right|r)[ _.-]*(brow|eyebrow)\b|\b(brow|eyebrow)[ _.-]*(right|r)\b/i,"brow-right"],
-    [/\b(mouth|lip|teeth|tongue)\b/i,"mouth"],
-    [/\b(front)[ _.-]*(hair|bang|fringe)|\b(bang|fringe)\b/i,"hair-front"],
-    [/\b(back|rear)[ _.-]*hair\b/i,"hair-back"],
-    [/\b(face|head|skin)\b/i,"face"],
-    [/\b(body|torso|neck)\b/i,"body"],
-    [/\b(dress|apron|skirt|sleeve|shirt|blouse|coat|cloth|clothes|uniform)\b/i,"clothes"],
-    [/\b(ribbon|bow|charm|cross|accessory|headress|headdress|plush|strap|bell|earring)\b/i,"accessory"],
-    [/\bhair\b/i,"hair-front"]
-  ];
-  function guess(name){ for(const [re,role] of rules) if(re.test(name)) return role; return "art"; }
-  function rows(){ return [...document.querySelectorAll("#layerList .layer-row")]; }
-  function rowName(row){ return row.querySelector(".layer-name")?.textContent?.trim() || "Layer"; }
-  function scan(){
-    suggestions = rows().map(row => ({row,name:rowName(row),role:guess(rowName(row)),hasMesh:/\bmesh\b/i.test(row.textContent||""),hasPhysics:/\bphysics\b/i.test(row.textContent||"")}));
-    const matched=suggestions.filter(s=>s.role!=="art");
-    const counts={}; for(const s of matched) counts[s.role]=(counts[s.role]||0)+1;
-    summary.textContent = suggestions.length ? `${matched.length}/${suggestions.length} layers recognized. ${Object.entries(counts).map(([k,v])=>`${k}: ${v}`).join(" • ") || "No confident matches yet."}` : "Import separated layers first.";
-    apply.disabled = matched.length===0;
-  }
-  function dispatch(el,type="change"){ el.dispatchEvent(new Event(type,{bubbles:true})); }
-  async function applySuggestions(){
-    if(!suggestions.length) scan();
-    let changed=0, meshed=0, physical=0;
-    for(const s of suggestions){
-      if(s.role==="art") continue;
-      s.row.click();
-      if(roleSelect && !roleSelect.disabled){ roleSelect.value=s.role; dispatch(roleSelect); changed++; }
-      const shouldMesh=["face","eye-left","eye-right","mouth","hair-front","hair-back","clothes"].includes(s.role);
-      if(shouldMesh && !s.hasMesh && createMesh && !createMesh.disabled){
-        if(meshDensity) meshDensity.value=["eye-left","eye-right","mouth"].includes(s.role)?"3x4":"4x5";
-        createMesh.click(); meshed++;
-      }
-      const shouldPhysics=["hair-front","hair-back","clothes","accessory"].includes(s.role);
-      if(shouldPhysics && physics && !physics.disabled && !physics.checked){ physics.checked=true; dispatch(physics); physical++; }
-      await new Promise(r=>setTimeout(r,0));
-    }
-    summary.textContent=`Applied ${changed} role assignment(s), created ${meshed} starter mesh(es), enabled physics on ${physical} layer(s). Review each result before detailed rigging.`;
-    scan();
-  }
-  analyze?.addEventListener("click",scan); apply?.addEventListener("click",applySuggestions);
-  window.MeguAutoRig={scan,apply:applySuggestions,guess};
-})();
+(()=>{const $=id=>document.getElementById(id),analyze=$("autoRigAnalyze"),apply=$("autoRigApply"),summary=$("autoRigSummary"),roleSelect=$("layerRole"),physics=$("physicsEnabled"),strength=$("physicsStrength"),damping=$("physicsDamping"),createMesh=$("createMesh"),meshDensity=$("meshDensity");let suggestions=[];
+const rules=[[/\b(left|l)[ _.-]*(eye|iris|pupil)\b|\b(eye|iris|pupil)[ _.-]*(left|l)\b/i,"eye-left",1],[/\b(right|r)[ _.-]*(eye|iris|pupil)\b|\b(eye|iris|pupil)[ _.-]*(right|r)\b/i,"eye-right",1],[/\b(left|l)[ _.-]*(brow|eyebrow)\b|\b(brow|eyebrow)[ _.-]*(left|l)\b/i,"brow-left",1],[/\b(right|r)[ _.-]*(brow|eyebrow)\b|\b(brow|eyebrow)[ _.-]*(right|r)\b/i,"brow-right",1],[/\b(mouth|lip|teeth|tongue)\b/i,"mouth",.95],[/\b(front)[ _.-]*(hair|bang|fringe)|\b(bang|fringe)\b/i,"hair-front",.95],[/\b(back|rear)[ _.-]*hair\b/i,"hair-back",.95],[/\b(face|head|skin)\b/i,"face",.85],[/\b(body|torso|neck)\b/i,"body",.85],[/\b(dress|apron|skirt|sleeve|shirt|blouse|coat|cloth|clothes|uniform)\b/i,"clothes",.85],[/\b(ribbon|bow|charm|cross|accessory|headdress|headress|plush|strap|bell|earring)\b/i,"accessory",.9],[/\bhair\b/i,"hair-front",.65]];
+const meshRoles=new Set(["face","eye-left","eye-right","mouth","hair-front","hair-back","clothes"]),physicsPresets={"hair-front":[.28,.82],"hair-back":[.38,.86],clothes:[.18,.88],accessory:[.32,.84]};
+function guessDetailed(name){const n=String(name||"").slice(0,120);for(const[re,role,confidence]of rules)if(re.test(n))return{role,confidence};return{role:"art",confidence:0}}function guess(name){return guessDetailed(name).role}function rows(){return[...document.querySelectorAll("#layerList .layer-row")]}function rowName(row){return row.querySelector(".layer-name")?.textContent?.trim()||"Layer"}function scan(){suggestions=rows().map(row=>{const g=guessDetailed(rowName(row));return{row,name:rowName(row),...g,hasMesh:/\bmesh\b/i.test(row.textContent||""),hasPhysics:/\bphysics\b/i.test(row.textContent||"")}});const matched=suggestions.filter(s=>s.confidence>=.65),high=matched.filter(s=>s.confidence>=.85),counts={};for(const s of high)counts[s.role]=(counts[s.role]||0)+1;summary.textContent=suggestions.length?`${high.length} high-confidence + ${matched.length-high.length} tentative of ${suggestions.length} layers. ${Object.entries(counts).map(([k,v])=>`${k}: ${v}`).join(" • ")||"No confident matches yet."}`:"Import separated layers first.";apply.disabled=high.length===0;return suggestions.map(({name,role,confidence})=>({name,role,confidence}))}function dispatch(el,type="change"){el?.dispatchEvent(new Event(type,{bubbles:true}))}async function applySuggestions(){if(!suggestions.length)scan();let changed=0,meshed=0,physical=0,skipped=0;for(const s of suggestions){if(s.confidence<.85){if(s.confidence)skipped++;continue}s.row.click();if(roleSelect&&!roleSelect.disabled){roleSelect.value=s.role;dispatch(roleSelect);changed++}if(meshRoles.has(s.role)&&!s.hasMesh&&createMesh&&!createMesh.disabled){if(meshDensity)meshDensity.value=["eye-left","eye-right","mouth"].includes(s.role)?"3x4":s.role==="face"?"5x7":"4x5";createMesh.click();meshed++}const preset=physicsPresets[s.role];if(preset&&physics&&!physics.disabled){if(!physics.checked){physics.checked=true;dispatch(physics);physical++}if(strength){strength.value=Math.round(preset[0]*100);dispatch(strength,"input")}if(damping){damping.value=Math.round(preset[1]*100);dispatch(damping,"input")}}await new Promise(r=>setTimeout(r,0))}scan();summary.textContent=`Applied ${changed} high-confidence role(s), ${meshed} starter mesh(es), ${physical} physics setup(s); ${skipped} tentative match(es) left for review.`}analyze?.addEventListener("click",scan);apply?.addEventListener("click",applySuggestions);window.MeguAutoRig={scan,apply:applySuggestions,guess,guessDetailed};})();
