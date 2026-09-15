@@ -28,10 +28,12 @@ const mesh = {
   triangles: [0, 1, 3, 0, 3, 2],
 };
 
+// v7 keyform transforms are absolute authoring states, matching the v6 keyform semantics.
+// Vertex forms are likewise absolute local mesh states.
 const corner = (x, y, dx, dy) => ({
   values: { ParamAngleX: x, ParamAngleY: y },
   form: {
-    transform: { x: dx, y: dy, rotation: 0, scaleX: 1, scaleY: 1, opacity: 1 },
+    transform: { x: 100 + dx, y: 200 + dy, rotation: 0, scaleX: 1, scaleY: 1, opacity: 1 },
     vertices: mesh.vertices.map((p) => ({ x: p.x + dx, y: p.y + dy })),
   },
 });
@@ -83,8 +85,9 @@ assert.equal(frame.drawables.length, 1);
 const face = frame.drawables[0];
 assert.equal(face.nodeId, "face");
 assert.equal(face.mesh.vertices.length, 4);
-// At X=30,Y=15 the correlated 2D track resolves roughly dx=15,dy=5.
-// Root (+10,+20) and face base transform (+100,+200) are then applied.
+// At X=30,Y=15 the correlated 2D track resolves dx=15,dy=5.
+// The deformed local point (-35,-45), layer (+115,+205) and root (+10,+20)
+// compose to (90,180).
 assert.ok(Math.abs(face.mesh.vertices[0].x - 90) < 1e-8, `unexpected x ${face.mesh.vertices[0].x}`);
 assert.ok(Math.abs(face.mesh.vertices[0].y - 180) < 1e-8, `unexpected y ${face.mesh.vertices[0].y}`);
 assert.equal(E.validateMesh(face.mesh).ok, true);
