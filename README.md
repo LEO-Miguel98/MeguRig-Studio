@@ -1,61 +1,84 @@
 # MeguRig Studio
 
-MeguRig Studio is a private, local-first VTuber rig-preparation workspace designed to turn separated character artwork into structured parameter-driven rig data.
+MeguRig Studio is a local-first VTuber rig-preparation workspace for separated character artwork. It is dependency-free at runtime and designed to run as a static site, including on GitHub Pages.
 
 ## Current capabilities
 
 - Flattened PNG/JPG/WebP and multi-layer transparent PNG/WebP import.
-- Layer ordering, visibility, rig roles, transforms, opacity, custom pivots, editable triangle-grid meshes, and transform/mesh keyforms.
-- Spring physics preview, built-in expressions, custom expression authoring, local webcam tracking, and conservative Auto Rig assistance.
-- `megurig.project.v5` data-only project export/reopen with local artwork reattachment.
-- Rig readiness validation and a Cubism handoff manifest exporter.
-- Ready-made advanced procedural VTuber prototype for testing rig controls without private artwork.
-- Dependency-free static architecture compatible with GitHub Pages.
+- Layer ordering, visibility, roles, transforms, opacity, pivots, and editable triangle-grid meshes.
+- Transform + mesh keyforms for Head X, Head Y, Body Z, Eye Open, and Mouth Open.
+- **Simultaneous multi-parameter transform and mesh blending** in the production renderer.
+- Per-layer spring physics with role-based Auto Rig starter presets.
+- Built-in expressions plus sanitized, persistent custom expressions.
+- Local webcam preview/tracking with explicit camera permission, neutral calibration, smoothing, and safe fallbacks.
+- Conservative Auto Rig role detection with confidence handling, starter meshes, pivots, and physics suggestions.
+- `megurig.project.v6` data-only save/reopen with local artwork reattachment by filename.
+- Rig-readiness validation and a Cubism handoff manifest exporter.
+- Ready-made procedural VTuber prototype for testing rig controls without private artwork.
+- Maid-class acceptance fixture covering a full-body model shape with face, eyes, brows, mouth, hair, clothing, ribbons/accessories, meshes, keyforms, physics, expressions, and combined deformation.
+- Automated regression/security checks through GitHub Actions.
 
 ## Rigging workflow
 
 1. Import separated artwork, or launch the ready-made advanced prototype for control testing.
-2. Run **Auto Rig Assistant** for conservative role/mesh/physics suggestions and review the result.
-3. Refine pivots and meshes, then capture transform + mesh keyforms at multiple parameter values.
-4. Tune spring physics and expression presets.
-5. Test webcam tracking where supported, including neutral calibration and smoothing.
-6. Run **Validate rig** before export.
-7. Export the MeguRig project and, when needed, the Cubism handoff manifest.
+2. Run **Auto Rig Assistant** and review its role/mesh/physics suggestions.
+3. Refine pivots and meshes.
+4. Capture transform + mesh keyforms at multiple parameter values.
+5. Preview multiple parameters together; Head X/Y, Body Z, Eye Open, and Mouth Open are blended simultaneously.
+6. Tune spring physics and expressions.
+7. Test webcam tracking where supported, then calibrate neutral and adjust smoothing.
+8. Run **Validate rig**.
+9. Export the MeguRig project and, when appropriate, the Cubism handoff manifest.
 
-## Expressions
+## Project persistence
 
-Built-in presets drive the same rig parameters used by keyforms. Custom expressions are sanitized, range-clamped, capped, individually removable, and exposed in a serializable form for project persistence integration. Built-in names cannot be silently overwritten.
+Projects use the `megurig.project.v6` schema. Rig data is stored as JSON; artwork is intentionally not embedded. On reopen, the user reselects the matching local artwork files and MeguRig reattaches them by sanitized filename. Custom expressions are stored in the project extension data and restored by the persistence module.
+
+Untrusted project data is bounded before use: schema versions, layer counts, known roles/parameters, numerical ranges, mesh dimensions, mesh offsets, keyform counts, markers, and project size are constrained.
 
 ## Webcam tracking
 
-Camera frames remain local. The dependency-free tracker uses the browser's native `FaceDetector` API where available. Face position drives Head X/Y; exposed landmark geometry can additionally assist roll and optional blink/mouth estimates. Unsupported channels remain manual instead of being fabricated. This is not yet equivalent to a dedicated cross-browser 3D landmark model.
+Camera frames stay local to the browser. Camera access starts only after user action and audio is disabled. The dependency-free tracker uses the browser's native `FaceDetector` when available. Face position drives Head X/Y, while exposed landmark geometry can additionally assist roll and optional blink/mouth estimates. Unsupported channels remain manual rather than being fabricated.
+
+Native tracking support varies by browser, so this is not equivalent to a dedicated cross-browser 3D landmark SDK.
 
 ## Validation and Cubism handoff
 
-The local validator checks structural readiness including core roles, parameters, meshes, keyforms, and physics relationships and reports a readiness score. The Cubism handoff exporter produces a structured interchange manifest containing layer order, artwork references, pivots, meshes, keyforms, physics, parameters, markers, and validation output.
+The local validator checks structural readiness, including core roles, parameters, meshes, keyforms, multi-parameter coverage, physics relationships, and expressions. The Cubism handoff exporter produces a structured interchange manifest with layer order, artwork references, pivots, meshes, keyforms, physics, parameters, markers, and validation output.
 
-The handoff manifest is **not** a compiled Live2D `.moc3` file. MeguRig does not bundle proprietary Cubism components or claim to compile `.moc3` directly.
+The handoff manifest is **not** a compiled Live2D `.moc3` file. MeguRig does not bundle proprietary Cubism components and does not claim to compile `.moc3` directly.
 
 ## Testing
 
-`tests.html` is a dependency-free browser smoke-test page for helper modules. It currently checks module availability, rejection of an empty rig, and structural validation of a minimal core-role rig. This is only an initial regression suite; broader interaction and visual tests are still required before production use.
+- `ci-test.mjs` runs dependency-free regression/security checks in GitHub Actions.
+- `tests.html` provides browser smoke tests.
+- `maid-acceptance.html` runs the maid-class structural/rig-engine acceptance fixture without storing private character artwork.
 
-## Target-model validation
+The CI fixture verifies simultaneous transform/mesh blending, validator behavior, multi-parameter coverage, expression presence, and scans static JS/HTML for remote runtime scripts and common credential-like token patterns.
 
-Development is being driven toward a full-body maid-style VTuber acceptance model with layered hair, face parts, eye/mouth expressions, sleeves, ribbons, back bow, clothing, accessories, and secondary-motion elements. The tool should not be considered ready until that class of model can be prepared, rigged, previewed, saved/reopened, validated, and handed off without breaking earlier workflows.
+## Target-model acceptance
+
+The acceptance fixture models the class of full-body maid VTuber requested for this project: layered front/back hair, face, left/right eyes, brows, mouth, body, dress/apron/sleeves, ribbons, bow, headdress/accessories, secondary physics, expressions, and combined X/Y deformation.
+
+This proves the **rig engine and project structure** can represent that model class. It does not magically separate a flattened/composite reference image into production-quality transparent source layers. Exact final artwork still needs clean separated layers (manually prepared or produced by a future image-part-separation workflow).
 
 ## Privacy and security
 
-Artwork and camera frames remain local to the browser. There is no backend, analytics, remote script requirement, or credential requirement. Project JSON is size-bounded and validated before restore; known parameters/roles are allowlisted, numerical ranges are clamped, and mesh/keyform sizes are limited. Do not commit personal model source art, credentials, proprietary Live2D files, or exported private model packages.
+- No backend upload path is required.
+- No runtime analytics or remote scripts are required.
+- No API keys, passwords, or tokens are required by the application.
+- Camera audio is disabled and frames are not sent to a MeguRig backend.
+- Individual image dimensions and combined decoded artwork pixel counts are bounded to reduce browser memory-exhaustion risk.
+- Object URLs and media tracks are released when no longer needed.
+- User-controlled names are rendered through text APIs rather than injected HTML.
 
-## Important limitations
+See `SECURITY.md` for the trust-boundary details.
 
-MeguRig is not yet a direct `.moc3` generator. Robust cross-browser landmark tracking, richer multi-parameter deformation blending, automatic image-part separation, complete expression persistence in the core project schema, and deeper Cubism workflow assistance remain in development.
+## Remaining limitations
 
-## Planned next stages
+- No direct `.moc3` compilation.
+- No production-grade automatic separation of a flattened character sheet into clean art layers yet.
+- Native face tracking quality/support varies by browser.
+- Complex professional Live2D models may still require manual mesh/keyform refinement and Cubism-side finishing.
 
-1. Multi-parameter transform and mesh deformation blending.
-2. Complete custom-expression persistence in project save/reopen.
-3. Stronger local landmark tracking and calibration.
-4. Smarter landmark/role assistance and common VTuber rig presets.
-5. Expand regression tests and run the maid-model end-to-end acceptance pass.
+MeguRig should be treated as a capable local-first rig-preparation and validation tool, not as a replacement for every proprietary Cubism authoring feature.
