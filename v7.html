@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="description" content="MeguRig Studio v7 Lab — local textured-mesh VTuber rigging with WebGL2." />
+  <title>MeguRig v7 Lab</title>
+  <link rel="stylesheet" href="v7.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">NEXT-GEN TEXTURED MESH ENGINE</p>
+      <h1>MeguRig v7 Lab</h1>
+    </div>
+    <div class="top-actions">
+      <a href="index.html">Stable Studio</a>
+      <span class="privacy">Local artwork · WebGL2</span>
+    </div>
+  </header>
+
+  <main class="shell">
+    <aside class="sidebar">
+      <section>
+        <h2>Project</h2>
+        <div class="grid2">
+          <label class="button" for="artInput">Import / reattach art</label>
+          <input id="artInput" type="file" accept="image/png,image/webp" multiple hidden />
+          <label class="button ghost" for="projectInput">Open project</label>
+          <input id="projectInput" type="file" accept="application/json,.json" hidden />
+          <button id="saveProject" disabled>Save v7 JSON</button>
+          <button id="validateProject" disabled>Validate</button>
+        </div>
+        <p class="hint">Separated transparent PNG/WebP files become real textured triangle meshes. v2-v6 projects can migrate after their artwork is reattached.</p>
+      </section>
+
+      <section>
+        <div class="section-title"><h2>Scene / deformer tree</h2><span id="nodeCount">0</span></div>
+        <div id="sceneTree" class="scene-tree"><p class="hint">Import separated artwork to begin.</p></div>
+        <div class="grid2">
+          <button id="wrapWarp" disabled>Wrap in Warp</button>
+          <button id="wrapRotation" disabled>Wrap in Rotation</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Selected node</h2>
+        <p id="selectedName" class="selected-name">None</p>
+        <div class="form-grid">
+          <label>X <input id="nodeX" type="number" step="1" disabled /></label>
+          <label>Y <input id="nodeY" type="number" step="1" disabled /></label>
+          <label>Rotation <input id="nodeRotation" type="number" step="0.1" disabled /></label>
+          <label>Scale X <input id="nodeScaleX" type="number" step="0.01" min="0.01" max="20" disabled /></label>
+          <label>Scale Y <input id="nodeScaleY" type="number" step="0.01" min="0.01" max="20" disabled /></label>
+          <label>Opacity <input id="nodeOpacity" type="number" step="0.01" min="0" max="1" disabled /></label>
+          <label id="drawOrderLabel">Draw order <input id="drawOrder" type="number" step="1" disabled /></label>
+          <label class="check"><input id="nodeVisible" type="checkbox" disabled /> Visible</label>
+        </div>
+      </section>
+
+      <section id="meshPanel" hidden>
+        <h2>Mesh vertex</h2>
+        <label>Vertex <select id="meshVertex"></select></label>
+        <div class="form-grid">
+          <label>Local X <input id="meshX" type="number" step="1" /></label>
+          <label>Local Y <input id="meshY" type="number" step="1" /></label>
+        </div>
+        <button id="resetMesh">Reset rectangular mesh</button>
+        <p class="hint">Edits move actual textured mesh vertices. The overlay shows current triangles.</p>
+      </section>
+
+      <section id="warpPanel" hidden>
+        <h2>Warp control point</h2>
+        <label>Point <select id="warpPoint"></select></label>
+        <div class="form-grid">
+          <label>Offset X <input id="warpDx" type="number" step="1" /></label>
+          <label>Offset Y <input id="warpDy" type="number" step="1" /></label>
+        </div>
+        <div class="grid2">
+          <button data-warp-preset="left">Bend left</button>
+          <button data-warp-preset="right">Bend right</button>
+          <button data-warp-preset="up">Bend up</button>
+          <button data-warp-preset="down">Bend down</button>
+          <button id="resetWarp" class="ghost">Reset warp</button>
+        </div>
+        <p class="hint">Warp offsets can be captured into 1D, 2D or 3D parameter keyforms.</p>
+      </section>
+
+      <section>
+        <h2>Parameters</h2>
+        <div id="parameterControls" class="parameter-controls"></div>
+      </section>
+
+      <section>
+        <h2>Keyform authoring</h2>
+        <label>Track<select id="trackAxes" disabled>
+          <option value="ParamAngleX">Head X</option>
+          <option value="ParamAngleY">Head Y</option>
+          <option value="ParamAngleZ">Head Z</option>
+          <option value="ParamAngleX,ParamAngleY">Head X × Y</option>
+          <option value="ParamAngleX,ParamAngleY,ParamAngleZ">Head X × Y × Z</option>
+          <option value="ParamBodyAngleZ">Body Z</option>
+          <option value="ParamEyeLOpen">Left eye open</option>
+          <option value="ParamEyeROpen">Right eye open</option>
+          <option value="ParamEyeBallX,ParamEyeBallY">Eye gaze X × Y</option>
+          <option value="ParamMouthOpenY">Mouth open</option>
+          <option value="ParamMouthForm">Mouth form</option>
+          <option value="ParamBreath">Breath</option>
+        </select></label>
+        <div class="grid2">
+          <button id="captureKey" disabled>Capture keyform</button>
+          <button id="deleteKey" class="danger" disabled>Delete at value</button>
+        </div>
+        <div id="trackSummary" class="track-summary"><p class="hint">Select a node, pose it, set parameters, then capture.</p></div>
+      </section>
+
+      <section id="physicsPanel" hidden>
+        <h2>Secondary physics</h2>
+        <label class="check"><input id="physicsEnabled" type="checkbox" /> Enabled</label>
+        <label>Segments <input id="physicsSegments" type="range" min="1" max="8" value="3" /><output id="physicsSegmentsOut">3</output></label>
+        <label>Stiffness <input id="physicsStiffness" type="range" min="1" max="60" value="12" /><output id="physicsStiffnessOut">12</output></label>
+        <label>Damping <input id="physicsDamping" type="range" min="50" max="99" value="82" /><output id="physicsDampingOut">0.82</output></label>
+      </section>
+    </aside>
+
+    <section class="workspace">
+      <div class="workspace-bar">
+        <strong id="modeLabel">WebGL2 preview</strong>
+        <span id="fps">0 FPS</span>
+      </div>
+      <div class="stage-wrap" id="stageWrap">
+        <canvas id="stage" width="1200" height="1200"></canvas>
+        <canvas id="overlay" width="1200" height="1200"></canvas>
+        <div id="emptyState" class="empty-state">
+          <strong>Import separated VTuber artwork</strong>
+          <span>PNG/WebP layers stay on this device.</span>
+        </div>
+      </div>
+      <footer class="statusbar">
+        <span id="status">Ready. WebGL2 engine not initialized yet.</span>
+        <span id="validationStatus">No project</span>
+      </footer>
+    </section>
+  </main>
+
+  <script src="engine/core.js" defer></script>
+  <script src="engine/project-v7.js" defer></script>
+  <script src="engine/expression-mixer.js" defer></script>
+  <script src="engine/tracking-filter.js" defer></script>
+  <script src="engine/editor-bridge.js" defer></script>
+  <script src="engine/runtime.js" defer></script>
+  <script src="engine/webgl2-renderer.js" defer></script>
+  <script src="v7-editor.js" defer></script>
+</body>
+</html>
