@@ -9,12 +9,62 @@
 
   const TRANSFORM_KEYS = ["x", "y", "rotation", "scaleX", "scaleY", "opacity"];
 
+  function cloneWarp(warp) {
+    if (!warp || !Number.isInteger(warp.cols) || !Number.isInteger(warp.rows) || !Array.isArray(warp.points)) return null;
+    if (warp.points.length !== warp.cols * warp.rows) return null;
+    return {
+      cols: warp.cols,
+      rows: warp.rows,
+      bounds: {
+        x: E.finite(warp.bounds?.x, 0),
+        y: E.finite(warp.bounds?.y, 0),
+        width: Math.max(1e-8, Math.abs(E.finite(warp.bounds?.width, 1))),
+        height: Math.max(1e-8, Math.abs(E.finite(warp.bounds?.height, 1))),
+      },
+      points: warp.points.map((point, index) => ({
+        u: E.finite(point?.u, (index % warp.cols) / Math.max(1, warp.cols - 1)),
+        v: E.finite(point?.v, Math.floor(index / warp.cols) / Math.max(1, warp.rows - 1)),
+        dx: E.finite(point?.dx, 0),
+        dy: E.finite(point?.dy, 0),
+      })),
+    };
+  }
+
+  function sameWarpTopology(a, b) {
+    return Boolean(a && b && a.cols === b.cols && a.rows === b.rows && a.points?.length === b.points?.length);
+  }
+
+  function sampleWarp(track, parameters, baseWarp) {
+    if (!baseWarp || !Array.isArray(track?.keys) || !track.keys.length) return null;
+    const pseudoKeys = [];
+    for (const key of track.keys) {
+      const warp = cloneWarp(key?.form?.warp);
+      if (!sameWarpTopology(baseWarp, warp)) return null;
+      pseudoKeys.push({
+        values: key.values,
+        form: {
+          transform: { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1, opacity: 1 },
+          vertices: warp.points.map((point) => ({ x: point.dx, y: point.dy })),
+        },
+      });
+    }
+    const sampled = E.sampleND(pseudoKeys, track.axes, parameters);
+    if (!sampled?.vertices || sampled.vertices.length !== baseWarp.points.length) return null;
+    const out = cloneWarp(baseWarp);
+    out.points.forEach((point, index) => {
+      point.dx = E.finite(sampled.vertices[index]?.x, point.dx);
+      point.dy = E.finite(sampled.vertices[index]?.y, point.dy);
+    });
+    return out;
+  }
+
   function baseForm(node) {
     return {
       transform: E.cloneForm({ transform: node?.transform || {} }).transform,
       vertices: Array.isArray(node?.mesh?.vertices)
         ? node.mesh.vertices.map((point) => ({ x: E.finite(point?.x, 0), y: E.finite(point?.y, 0) }))
         : null,
+      warp: cloneWarp(node?.warp),
     };
   }
 
@@ -29,6 +79,12 @@
         point.y += E.finite(sampled.vertices[index]?.y, base.vertices[index].y) - base.vertices[index].y;
       });
     }
+    if (sameWarpTopology(target.warp, sampled.warp) && sameWarpTopology(base.warp, sampled.warp)) {
+      target.warp.points.forEach((point, index) => {
+        point.dx += E.finite(sampled.warp.points[index]?.dx, base.warp.points[index].dx) - base.warp.points[index].dx;
+        point.dy += E.finite(sampled.warp.points[index]?.dy, base.warp.points[index].dy) - base.warp.points[index].dy;
+      });
+    }
     target.transform.opacity = E.clamp(target.transform.opacity, 0, 1);
     target.transform.scaleX = E.clamp(target.transform.scaleX, 0.001, 50);
     target.transform.scaleY = E.clamp(target.transform.scaleY, 0.001, 50);
@@ -40,10 +96,12 @@
     const out = {
       transform: { ...base.transform },
       vertices: base.vertices?.map((point) => ({ ...point })) || null,
+      warp: cloneWarp(base.warp),
     };
     for (const track of Array.isArray(node?.tracks) ? node.tracks : []) {
       if (!Array.isArray(track?.axes) || !track.axes.length || !Array.isArray(track?.keys) || !track.keys.length) continue;
       const sampled = E.sampleND(track.keys, track.axes, parameters);
+      if (sampled && base.warp) sampled.warp = sampleWarp(track, parameters, base.warp);
       addFormDelta(out, sampled, base);
     }
     return out;
@@ -107,7 +165,7 @@
         parentId: node.parentId == null ? null : String(node.parentId),
         type: node.type,
         transform: local.get(String(node.id))?.transform || node.transform,
-        warp: node.warp || null,
+        warp: local.get(String(node.id))?.warp || node.warp || null,
       }));
       const dynamicMap = E.buildNodeMap(dynamicNodes);
 
@@ -132,9 +190,9 @@
         });
       }
       drawables.sort((a, b) => a.drawOrder - b.drawOrder || a.nodeId.localeCompare(b.nodeId));
-      return { parameters, drawables };
+      return { parameters, drawables, localForms: local };
     }
   }
 
-  ROOT.MeguRuntime = Object.freeze({ Runtime, evaluateLocalForm, addFormDelta });
+  ROOT.MeguRuntime = Object.freeze({ Runtime, evaluateLocalForm, addFormDelta, cloneWarp, sampleWarp });
 })();
