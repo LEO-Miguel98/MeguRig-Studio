@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import path from "node:path";
 import vm from "node:vm";
 import assert from "node:assert/strict";
 const context=vm.createContext({window:{},console,Math,Number,Object,Array,Set,Map,JSON,Date,String,Boolean,RegExp});
@@ -16,5 +17,21 @@ const roles=["face","eye-left","eye-right","mouth","body","hair-front","clothes"
 const project={schema:"megurig.project.v6",layers,parameters:{ParamAngleX:0,ParamAngleY:0,ParamBodyAngleZ:0,ParamEyeOpen:1,ParamMouthOpenY:0},expressions:{Happy:{headX:0,headY:2,bodyZ:0,eyeOpen:70,mouthOpen:40}}};
 const check=MeguValidator.inspect(project);assert.equal(check.ok,true,check.issues.join("; "));assert.equal(check.stats.layers,8);assert.ok(check.stats.multiParameterLayers>=1);assert.equal(check.stats.expressions,1);
 assert.equal(MeguValidator.inspect({layers:[],parameters:{}}).ok,false);
-for(const file of fs.readdirSync(new URL(".",import.meta.url)).filter(n=>n.endsWith(".js")||n.endsWith(".html"))){const text=fs.readFileSync(new URL(`./${file}`,import.meta.url),"utf8");assert.ok(!/<script[^>]+src=["']https?:\/\//i.test(text),`${file}: remote script detected`);assert.ok(!/(AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{30,}|sk-[A-Za-z0-9]{20,})/.test(text),`${file}: credential-like token detected`)}
+
+function sourceFiles(dir){
+ const out=[];
+ for(const entry of fs.readdirSync(dir,{withFileTypes:true})){
+  if(entry.name===".git")continue;
+  const full=path.join(dir,entry.name);
+  if(entry.isDirectory())out.push(...sourceFiles(full));
+  else if(/\.(?:js|mjs|html)$/i.test(entry.name))out.push(full);
+ }
+ return out;
+}
+const root=path.dirname(new URL(import.meta.url).pathname);
+for(const file of sourceFiles(root)){
+ const text=fs.readFileSync(file,"utf8"),label=path.relative(root,file);
+ assert.ok(!/<script[^>]+src=["']https?:\/\//i.test(text),`${label}: remote script detected`);
+ assert.ok(!/(AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{30,}|sk-[A-Za-z0-9]{20,})/.test(text),`${label}: credential-like token detected`);
+}
 console.log(`PASS: MeguRig regression/security checks (${check.score}/100 fixture readiness)`);
