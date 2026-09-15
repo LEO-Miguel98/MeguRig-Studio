@@ -55,6 +55,8 @@ The handoff manifest is **not** a compiled Live2D `.moc3` file. MeguRig does not
 - `tests.html` provides browser smoke tests.
 - `maid-acceptance.html` runs the maid-class structural/rig-engine acceptance fixture without storing private character artwork.
 - `RELEASE.md` tracks release-readiness checks and intentional limitations.
+- `engine/core.test.mjs` verifies multidimensional keyform interpolation, explicit mesh validation, deformer hierarchy evaluation, warp-grid behavior, and spring-chain physics.
+- `engine/webgl2-renderer.test.mjs` verifies GPU mesh buffer packing without requiring a GPU in CI.
 
 The CI fixture verifies simultaneous transform/mesh blending, production renderer resolution, control-value mapping, validator behavior, multi-parameter coverage, expression presence, and scans static JS/HTML for remote runtime scripts and common credential-like token patterns.
 
@@ -75,6 +77,12 @@ This proves the **rig engine and project structure** can represent that model cl
 - User-controlled names are rendered through text APIs rather than injected HTML.
 
 See `SECURITY.md` for trust-boundary details.
+
+## Post-v6 engine research
+
+The researched architecture for the next-generation artwork-based engine is documented in [`docs/VTUBER_ENGINE_ARCHITECTURE.md`](docs/VTUBER_ENGINE_ARCHITECTURE.md). It covers professional art separation, explicit triangle meshes and UVs, nested warp/rotation deformers, multidimensional keyforms, Head XYZ, facial rigging, multi-stage physics, local face landmark tracking, renderer selection, security, and a phased implementation roadmap.
+
+The first isolated foundation lives under `engine/`. It does **not** replace the live v6 editor yet. This keeps the deployed tool stable while the new explicit-mesh/deformer/WebGL2 architecture is tested before project-v7 migration.
 
 ## Remaining limitations
 
