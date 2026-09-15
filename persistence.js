@@ -1,0 +1,6 @@
+"use strict";
+(()=>{const input=document.getElementById("projectInput"),status=document.getElementById("status"),MAX_BYTES=2*1024*1024;let installed=false;
+function installSnapshotExtension(){if(installed||!window.MeguRig?.snapshot||!window.MeguExpressions)return;const base=window.MeguRig.snapshot.bind(window.MeguRig);window.MeguRig.snapshot=()=>{const project=base();project.expressions=window.MeguExpressions.exportCustom?.()||{};return project};installed=true}
+async function restoreExpressions(file){if(!file||file.size>MAX_BYTES||!window.MeguExpressions?.load)return;try{const raw=JSON.parse(await file.text());if(!raw||typeof raw!=="object"||!/^megurig\.project\.v[2-6]$/.test(String(raw.schema||"")))return;window.MeguExpressions.load(raw.expressions&&typeof raw.expressions==="object"?raw.expressions:{});if(status&&Object.keys(raw.expressions||{}).length)status.textContent+=" Custom expressions restored."}catch{/* Core loader reports malformed JSON. */}}
+function retryInstall(){installSnapshotExtension();if(!installed)requestAnimationFrame(retryInstall)}
+window.addEventListener("DOMContentLoaded",()=>{retryInstall();input?.addEventListener("change",()=>restoreExpressions(input.files?.[0]))});window.addEventListener("megurig-expressions-changed",installSnapshotExtension);})();

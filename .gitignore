@@ -1,0 +1,32 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local environment / credentials
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Local model artwork / exports
+models/
+artwork/
+exports/
+*.psd
+*.clip
+*.cmo3
+*.moc3
+
+# Build / package caches
+node_modules/
+dist/
+.cache/
+coverage/
+
+# Temporary files
+*.tmp
+*.log
