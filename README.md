@@ -33,15 +33,19 @@ MeguRig Studio is a local-first VTuber rig-preparation workspace for separated c
 
 ## Project persistence
 
-Projects use the `megurig.project.v6` schema. Rig data is stored as JSON; artwork is intentionally not embedded. On reopen, the user reselects the matching local artwork files and MeguRig reattaches them by sanitized filename. Custom expressions are stored in project extension data and restored by the persistence module.
+The stable editor uses the `megurig.project.v6` schema. Rig data is stored as JSON; artwork is intentionally not embedded. On reopen, the user reselects the matching local artwork files and MeguRig reattaches them by sanitized filename. Custom expressions are stored in project extension data and restored by the persistence module.
 
-Untrusted project data is bounded before use: schema versions, layer counts, known roles/parameters, numerical ranges, mesh dimensions, mesh offsets, keyform counts, markers, and project size are constrained.
+The next-generation lab uses `megurig.project.v7`, which adds explicit texture resources, triangle vertices, UVs, scene/deformer nodes, richer parameter tracks, and hierarchy data. The v7 lab can also migrate v2-v6 projects after the matching local artwork is reattached so legacy grid meshes can be converted using real image dimensions.
+
+Untrusted project data is bounded before use: schema versions, node/layer counts, known roles/parameters, numerical ranges, mesh dimensions, mesh offsets, keyform counts, markers, and project size are constrained.
 
 ## Webcam tracking
 
-Camera frames stay local to the browser. Camera access starts only after user action and audio is disabled. The dependency-free tracker uses the browser's native `FaceDetector` when available. Face position drives Head X/Y, while exposed landmark geometry can additionally assist roll and optional blink/mouth estimates. Unsupported channels remain manual rather than being fabricated.
+Camera frames stay local to the browser. Camera access starts only after user action and audio is disabled. The dependency-free stable tracker uses the browser's native `FaceDetector` when available. Face position drives Head X/Y, while exposed landmark geometry can additionally assist roll and optional blink/mouth estimates. Unsupported channels remain manual rather than being fabricated.
 
-Native tracking support varies by browser, so this is not equivalent to a dedicated cross-browser 3D landmark SDK.
+The v7 engine also contains calibrated per-channel tracking filters with dead zones, confidence handling, response-time tuning, and tracking-loss decay so a future richer landmark tracker can feed the rig without bypassing smoothing/calibration.
+
+Native tracking support varies by browser, so this is not equivalent to a dedicated cross-browser 3D landmark SDK yet.
 
 ## Validation and Cubism handoff
 
@@ -56,6 +60,9 @@ The handoff manifest is **not** a compiled Live2D `.moc3` file. MeguRig does not
 - `maid-acceptance.html` runs the maid-class structural/rig-engine acceptance fixture without storing private character artwork.
 - `RELEASE.md` tracks release-readiness checks and intentional limitations.
 - `engine/core.test.mjs` verifies multidimensional keyform interpolation, explicit mesh validation, deformer hierarchy evaluation, warp-grid behavior, and spring-chain physics.
+- `engine/project-v7.test.mjs` verifies v2-v6 → v7 migration and scene validation.
+- `engine/runtime.test.mjs` verifies correlated multidimensional deformation, hierarchy, expressions, and physics.
+- `engine/editor-bridge.test.mjs` verifies real image-sized textured meshes, hierarchy authoring, key capture, and parameter-driven animated warp deformers.
 - `engine/webgl2-renderer.test.mjs` verifies GPU mesh buffer packing without requiring a GPU in CI.
 
 The CI fixture verifies simultaneous transform/mesh blending, production renderer resolution, control-value mapping, validator behavior, multi-parameter coverage, expression presence, and scans static JS/HTML for remote runtime scripts and common credential-like token patterns.
@@ -72,22 +79,36 @@ This proves the **rig engine and project structure** can represent that model cl
 - No runtime analytics or remote scripts are required.
 - No API keys, passwords, or tokens are required by the application.
 - Camera audio is disabled and frames are not sent to a MeguRig backend.
-- Individual image dimensions and combined decoded artwork pixel counts are bounded to reduce browser memory-exhaustion risk.
-- Object URLs and media tracks are released when no longer needed.
+- Individual image sizes and project JSON sizes are bounded to reduce browser memory-exhaustion risk.
+- Temporary object URLs, GPU textures, image bitmaps, and media tracks are released when no longer needed.
 - User-controlled names are rendered through text APIs rather than injected HTML.
 
 See `SECURITY.md` for trust-boundary details.
 
-## Post-v6 engine research
+## Next-generation v7 WebGL rigging lab
 
-The researched architecture for the next-generation artwork-based engine is documented in [`docs/VTUBER_ENGINE_ARCHITECTURE.md`](docs/VTUBER_ENGINE_ARCHITECTURE.md). It covers professional art separation, explicit triangle meshes and UVs, nested warp/rotation deformers, multidimensional keyforms, Head XYZ, facial rigging, multi-stage physics, local face landmark tracking, renderer selection, security, and a phased implementation roadmap.
+The researched architecture for the artwork-based engine is documented in [`docs/VTUBER_ENGINE_ARCHITECTURE.md`](docs/VTUBER_ENGINE_ARCHITECTURE.md). It covers professional art separation, explicit triangle meshes and UVs, nested warp/rotation deformers, multidimensional keyforms, Head XYZ, facial rigging, multi-stage physics, local face landmark tracking, renderer selection, security, and a phased implementation roadmap.
 
-The first isolated foundation lives under `engine/`. It does **not** replace the live v6 editor yet. This keeps the deployed tool stable while the new explicit-mesh/deformer/WebGL2 architecture is tested before project-v7 migration.
+The tested next-generation foundation lives under `engine/`, and `v7.html` is the first editor surface using it end-to-end. The lab can:
+
+- import or reattach real separated PNG/WebP artwork locally;
+- create explicit image-sized textured triangle meshes with UV coordinates;
+- render those meshes through WebGL2 instead of procedural Canvas character shapes;
+- author a scene/deformer hierarchy with warp and rotation wrappers;
+- edit actual mesh vertices and warp control-point offsets;
+- capture 1D, 2D, or 3D parameter keyforms including animated warp-deformer states;
+- preview Head X/Y/Z, body, independent eyes, gaze, brows, mouth, and breath parameter channels;
+- enable multi-segment secondary physics per artwork layer;
+- save/validate project-v7 JSON while keeping artwork outside the project file;
+- migrate older v2-v6 projects when artwork dimensions are available.
+
+The stable v6 editor remains available while v7 matures. This keeps the existing tool usable while the real textured-mesh/deformer workflow is expanded and acceptance-tested.
 
 ## Remaining limitations
 
 - No direct `.moc3` compilation.
 - No production-grade automatic separation of a flattened character sheet into clean art layers yet.
+- The v7 WebGL lab does not yet implement clipping masks, a complete drag-based mesh/deformer toolset, or the final cross-browser landmark tracker.
 - Native face tracking quality/support varies by browser.
 - Complex professional Live2D models may still require manual mesh/keyform refinement and Cubism-side finishing.
 
