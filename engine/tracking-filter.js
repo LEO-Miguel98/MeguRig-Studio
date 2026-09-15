@@ -13,6 +13,8 @@
       if (this.max < this.min) [this.min, this.max] = [this.max, this.min];
       this.defaultValue = E.clamp(E.finite(options.defaultValue, this.mode === "absolute" ? this.max : 0), this.min, this.max);
       this.sensitivity = E.finite(options.sensitivity, 1);
+      // Offset-channel dead zones are expressed in the raw calibrated input space.
+      // Applying them before sensitivity makes tuning independent from output scaling.
       this.deadZone = Math.max(0, E.finite(options.deadZone, 0));
       this.timeConstant = E.clamp(E.finite(options.timeConstant, 0.08), 0.001, 5);
       this.lostTimeConstant = E.clamp(E.finite(options.lostTimeConstant, 0.25), 0.001, 10);
@@ -32,8 +34,9 @@
     target(raw) {
       let value = E.finite(raw, this.mode === "absolute" ? this.defaultValue : this.neutral);
       if (this.mode === "offset") {
-        value = (value - this.neutral) * this.sensitivity;
+        value -= this.neutral;
         if (Math.abs(value) < this.deadZone) value = 0;
+        else value *= this.sensitivity;
       } else {
         value *= this.sensitivity;
       }
