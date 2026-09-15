@@ -8,6 +8,7 @@ MeguRig Studio is a local-first VTuber rig-preparation workspace for separated c
 - Layer ordering, visibility, roles, transforms, opacity, pivots, and editable triangle-grid meshes.
 - Transform + mesh keyforms for Head X, Head Y, Body Z, Eye Open, and Mouth Open.
 - **Simultaneous multi-parameter transform and mesh blending** in the production renderer.
+- Clamped production parameter inputs so malformed/out-of-range UI values cannot drive unsafe deformation ranges.
 - Per-layer spring physics with role-based Auto Rig starter presets.
 - Built-in expressions plus sanitized, persistent custom expressions.
 - Local webcam preview/tracking with explicit camera permission, neutral calibration, smoothing, and safe fallbacks.
@@ -32,7 +33,7 @@ MeguRig Studio is a local-first VTuber rig-preparation workspace for separated c
 
 ## Project persistence
 
-Projects use the `megurig.project.v6` schema. Rig data is stored as JSON; artwork is intentionally not embedded. On reopen, the user reselects the matching local artwork files and MeguRig reattaches them by sanitized filename. Custom expressions are stored in the project extension data and restored by the persistence module.
+Projects use the `megurig.project.v6` schema. Rig data is stored as JSON; artwork is intentionally not embedded. On reopen, the user reselects the matching local artwork files and MeguRig reattaches them by sanitized filename. Custom expressions are stored in project extension data and restored by the persistence module.
 
 Untrusted project data is bounded before use: schema versions, layer counts, known roles/parameters, numerical ranges, mesh dimensions, mesh offsets, keyform counts, markers, and project size are constrained.
 
@@ -53,8 +54,9 @@ The handoff manifest is **not** a compiled Live2D `.moc3` file. MeguRig does not
 - `ci-test.mjs` runs dependency-free regression/security checks in GitHub Actions.
 - `tests.html` provides browser smoke tests.
 - `maid-acceptance.html` runs the maid-class structural/rig-engine acceptance fixture without storing private character artwork.
+- `RELEASE.md` tracks release-readiness checks and intentional limitations.
 
-The CI fixture verifies simultaneous transform/mesh blending, validator behavior, multi-parameter coverage, expression presence, and scans static JS/HTML for remote runtime scripts and common credential-like token patterns.
+The CI fixture verifies simultaneous transform/mesh blending, production renderer resolution, control-value mapping, validator behavior, multi-parameter coverage, expression presence, and scans static JS/HTML for remote runtime scripts and common credential-like token patterns.
 
 ## Target-model acceptance
 
@@ -72,7 +74,7 @@ This proves the **rig engine and project structure** can represent that model cl
 - Object URLs and media tracks are released when no longer needed.
 - User-controlled names are rendered through text APIs rather than injected HTML.
 
-See `SECURITY.md` for the trust-boundary details.
+See `SECURITY.md` for trust-boundary details.
 
 ## Remaining limitations
 
