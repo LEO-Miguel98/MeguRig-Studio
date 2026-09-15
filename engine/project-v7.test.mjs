@@ -70,7 +70,7 @@ const face = migrated.nodes[1];
 assert.equal(face.type, "layer");
 assert.equal(face.parentId, "root");
 assert.equal(face.mesh.vertices.length, 4);
-assert.deepEqual(face.mesh.triangles, [0, 1, 3, 0, 3, 2]);
+assert.deepEqual(Array.from(face.mesh.triangles), [0, 1, 3, 0, 3, 2]);
 assert.equal(face.mesh.vertices[0].x, -50);
 assert.equal(face.mesh.vertices[0].y, -100);
 assert.equal(face.mesh.vertices[1].x, 60);
