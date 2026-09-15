@@ -1,0 +1,18 @@
+import fs from "node:fs";
+import vm from "node:vm";
+import assert from "node:assert/strict";
+const context=vm.createContext({window:{},console,Math,Number,Object,Array,Set,Map,JSON,Date,String,Boolean,RegExp});
+for(const file of ["blend.js","validator.js"])vm.runInContext(fs.readFileSync(new URL(`./${file}`,import.meta.url),"utf8"),context,{filename:file});
+const {MeguBlend,MeguValidator}=context.window;
+assert.ok(MeguBlend,"blend API missing");assert.ok(MeguValidator,"validator API missing");
+const base={x:0,y:0,rotation:0,scale:1,opacity:1,mesh:null,keyforms:{ParamAngleX:[{value:-30,transform:{x:-10,y:0,rotation:-5,scale:1,opacity:1}},{value:30,transform:{x:10,y:0,rotation:5,scale:1,opacity:1}}],ParamAngleY:[{value:-30,transform:{x:0,y:-20,rotation:0,scale:1,opacity:1}},{value:30,transform:{x:0,y:20,rotation:0,scale:1,opacity:1}}]}};
+let r=MeguBlend.blend(base,{ParamAngleX:30,ParamAngleY:30});assert.equal(r.transform.x,10);assert.equal(r.transform.y,20);assert.equal(r.transform.rotation,5);
+const mesh={cols:2,rows:2,points:[{u:0,v:0,ox:0,oy:0},{u:1,v:0,ox:0,oy:0},{u:0,v:1,ox:0,oy:0},{u:1,v:1,ox:0,oy:0}]};
+const meshLayer={...base,mesh,keyforms:{ParamAngleX:[{value:-30,transform:{...base},mesh},{value:30,transform:{...base},mesh:{...mesh,points:mesh.points.map((p,i)=>({...p,ox:i+1}))}}],ParamAngleY:[{value:-30,transform:{...base},mesh},{value:30,transform:{...base},mesh:{...mesh,points:mesh.points.map((p,i)=>({...p,oy:i+1}))}}]}};
+r=MeguBlend.blend(meshLayer,{ParamAngleX:30,ParamAngleY:30});assert.equal(r.mesh.points[3].ox,4);assert.equal(r.mesh.points[3].oy,4);
+const roles=["face","eye-left","eye-right","mouth","body","hair-front","clothes","accessory"],layers=roles.map((role,i)=>({name:role,fileName:`${role}.png`,role,mesh:["face","eye-left","eye-right","mouth","hair-front","clothes"].includes(role)?mesh:null,keyforms:i===0?base.keyforms:{},physics:{enabled:["hair-front","clothes","accessory"].includes(role),strength:.4,damping:.8}}));
+const project={schema:"megurig.project.v6",layers,parameters:{ParamAngleX:0,ParamAngleY:0,ParamBodyAngleZ:0,ParamEyeOpen:1,ParamMouthOpenY:0},expressions:{Happy:{headX:0,headY:2,bodyZ:0,eyeOpen:70,mouthOpen:40}}};
+const check=MeguValidator.inspect(project);assert.equal(check.ok,true,check.issues.join("; "));assert.equal(check.stats.layers,8);assert.ok(check.stats.multiParameterLayers>=1);
+assert.equal(MeguValidator.inspect({layers:[],parameters:{}}).ok,false);
+for(const file of fs.readdirSync(new URL(".",import.meta.url)).filter(n=>n.endsWith(".js")||n.endsWith(".html"))){const text=fs.readFileSync(new URL(`./${file}`,import.meta.url),"utf8");assert.ok(!/<script[^>]+src=["']https?:\/\//i.test(text),`${file}: remote script detected`);assert.ok(!/(AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{30,}|sk-[A-Za-z0-9]{20,})/.test(text),`${file}: credential-like token detected`)}
+console.log(`PASS: MeguRig regression/security checks (${check.score}/100 fixture readiness)`);
